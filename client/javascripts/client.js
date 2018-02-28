@@ -7,28 +7,6 @@ var position = {
     x:Math.random()*100+300,
     y:Math.random()*200+200,
 };
-function createPlayer(x,y) {//新建本地玩家
-    cursors = game.input.keyboard.createCursorKeys();
-    fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-    client_player=new Player(x,y);
-    player=game.add.sprite(x,y,'ship');
-    weapon = game.add.weapon(30, 'bullet');
-
-    //  The bullets will be automatically killed when they are 2000ms old
-    weapon.bulletKillType = Phaser.Weapon.KILL_LIFESPAN;
-    weapon.bulletLifespan = 2000;
-
-    //  The speed at which the bullet is fired
-    weapon.bulletSpeed = 600;
-
-    //  Speed-up the rate of fire, allowing them to shoot 1 bullet every 60ms
-    weapon.fireRate = 100;
-    game.physics.enable(player, Phaser.Physics.ARCADE);
-   // client_player.id=this.id;
-   // console.log('socket.id========>  '+this.id);
-    weapon.trackSprite(player, 0, 0, true);
-    socket.emit('new_player',client_player);
-}
 
 var remote_player = function (id,x,y) {
     this.id=id;
@@ -47,31 +25,34 @@ main.prototype = {
     },
     create: function () {
         socket = io.connect();
-        cursors = game.input.keyboard.createCursorKeys();
-        fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-        player=game.add.sprite(position.x,position.y,'ship');
-        player.anchor.set(0.5);
-        game.physics.arcade.enable(player);
-
-        player.body.drag.set(70);
-        player.body.maxVelocity.set(200);
+        
         weapon = game.add.weapon(30, 'bullet');
         weapon.bulletKillType = Phaser.Weapon.KILL_LIFESPAN;
         weapon.bulletLifespan = 2000;
-        weapon.bulletSpeed = 600;
+        weapon.bulletSpeed = 400;
         weapon.fireRate = 100;
+        player=game.add.sprite(position.x,position.y,'ship');
+        player.anchor.set(0.5);
+        game.physics.arcade.enable(player);
+        player.body.drag.set(100);//摩擦力..
+        player.body.maxVelocity.set(200);
         game.physics.enable(player, Phaser.Physics.ARCADE);
         weapon.trackSprite(player, 0, 0, true);
+        game.world.wrap(player, 16);
+        cursors = game.input.keyboard.createCursorKeys();
+        fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
         socketHandler();
     },
     update: function () {
         if (cursors.up.isDown)
         {
-            game.physics.arcade.accelerationFromRotation(player.rotation, 300, player.body.acceleration);
+            game.physics.arcade.accelerationFromRotation(player.rotation, 600, player.body.acceleration);
         }
         else
         {
             player.body.acceleration.set(0);
+//            player.body.velocity.x=0;
+//            player.body.velocity.y=0;
         }
         if (cursors.left.isDown)
         {
