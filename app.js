@@ -23,8 +23,8 @@ var PL_LS = [];
 var SOCKET_LS = {}
 io.sockets.on('connection', function (socket) {
     console.log('新用户已连接');
-    socket.on('new_player',onNewPlayer);
-    socket.on('diconnect',onClientDisconnect);
+    socket.on('new player',onNewPlayer);
+    socket.on('disconnect',onClientDisconnect);
 
 });
 function onNewPlayer(data) {
@@ -48,7 +48,7 @@ function onNewPlayer(data) {
         this.emit('ConnectedPlayer',p_info);//
     }
     //向其他客户端发送新玩家的信息
-    this.broadcast.emit('new_other_player',current_player_info);
+    this.broadcast.emit('new player',current_player_info);
 }
 
 function onClientDisconnect() {

@@ -34,7 +34,7 @@ main.prototype = {
         player=game.add.sprite(position.x,position.y,'ship');
         player.anchor.set(0.5);
         game.physics.arcade.enable(player);
-        player.body.drag.set(100);//摩擦力..
+        player.body.drag.set(130);//摩擦力..
         player.body.maxVelocity.set(200);
         game.physics.enable(player, Phaser.Physics.ARCADE);
         weapon.trackSprite(player, 0, 0, true);
@@ -89,13 +89,18 @@ function onNewPlayer(data){
     }
     other_players.push(new RemotePlayer(data.id,game,player,data.x,data.y))
 }
+function displayOtherPlayer(data){
+    
+}
 var socketHandler = function(){
     socket.on('connect',onSocketConnected);
     socket.on('disconnect',onSocketDisconnect);
     socket.on('new player',onNewPlayer);
+    socket.on('ConnectedPlayer',displayOtherPlayer);
     socket.on('player_move',onPlayerMove);
     
 }
+
 function FindPlayerById (id) {
   for (var i = 0; i < other_players.length; i++) {
     if (other_players[i].player.name === id) {
