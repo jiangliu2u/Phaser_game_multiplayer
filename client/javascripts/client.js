@@ -6,13 +6,16 @@ var fireButton;
 var position = {
     x: Math.random() * 100 + 300,
     y: Math.random() * 200 + 200,
+    rotation:Math.random()+1
 };
 
-var remote_player = function (id, x, y) {
+var remote_player = function (id, x, y, rotation) {
     this.id = id;
     this.x = x;
     this.y = y;
+    this.rotation = rotation;
     this.player = game.add.sprite(x, y, 'ship');
+    this.player.rotation = this.rotation;
 }
 
 var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
@@ -56,6 +59,8 @@ main.prototype = {
         }
         if (cursors.left.isDown) {
             player.body.angularVelocity = -300;
+            console.log('player angle:'+player.angle);
+            console.log('player rotation:'+player.rotation);
         }
         else if (cursors.right.isDown) {
             player.body.angularVelocity = 300;
@@ -67,12 +72,13 @@ main.prototype = {
         if (fireButton.isDown) {
             weapon.fire();
         }
+        socket.emit('move player',{id:socket.id,x:player.x,y:player.y,rotation:player.rotation})
     }
 };
 
 function onSocketConnected() {
     console.log("Connected  to socket server");
-    socket.emit('new player', {x: player.x, y: player.y});
+    socket.emit('new player', {x: player.x, y: player.y,rotation:player.rotation});
 }
 
 function onSocketDisconnect() {
@@ -87,24 +93,32 @@ function onNewPlayer(data) {
         console.log('Duplicate Player');
         //return;
     } else {
-        other_players.push(new RemotePlayer(data.id, game, data.x, data.y))
+        other_players.push(new RemotePlayer(data.id, game, data.x, data.y, data.rotation))
     }
     console.log(other_players+'onnewPlayer');
 }
 
 function displayOtherPlayer(data) {
-    other_players.push(new RemotePlayer(data.id, game, data.x, data.y));
+    other_players.push(new RemotePlayer(data.id, game, data.x, data.y, data.rotation));
     console.log(other_players+'displayPlayer');
 };
+
 
 var socketHandler = function () {
     socket.on('connect', onSocketConnected);
     socket.on('disconnect', onSocketDisconnect);
     socket.on('new player', onNewPlayer);
     socket.on('ConnectedPlayer', displayOtherPlayer);//此前连接的玩家
-    socket.on('player_move', onPlayerMove);
+    socket.on('move player', onPlayerMove);
 
 };
+function onPlayerMove(data){
+    var moved_player = FindPlayerById(data.id);
+    moved_player.player.x=data.x;
+    moved_player.player.y=data.y;
+    moved_player.player.rotation=data.rotation;
+    
+}
 
 function FindPlayerById(id) {
     for (var i = 0; i < other_players.length; i++) {
