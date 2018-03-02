@@ -27,6 +27,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('new player', onNewPlayer);
     socket.on('disconnect', onClientDisconnect);
     socket.on('move player',onPlayerMove);
+    socket.on('fire', onPlayerFire);
 
 });
 
@@ -39,7 +40,7 @@ function onNewPlayer(data) {
         id: newPlayer.id,
         x: newPlayer.x,
         y: newPlayer.y,
-        rotation:newPlayer.rotation
+        rotation: newPlayer.rotation
     };
     for (var i = 0; i < PL_LS.length; i++) {
         connected_player = PL_LS[i];
@@ -75,6 +76,11 @@ function onPlayerMove(data){
     moveplayer.y=data.y;
     moveplayer.rotation=data.rotation;
     this.broadcast.emit('move player',moveplayer);
+}
+
+function onPlayerFire(data){
+    var fire_player = find_playerid(data.id);
+    this.broadcast.emit("player fire",fire_player);
 }
 function find_playerid(id) {
     for (var i = 0; i < PL_LS.length; i++) {

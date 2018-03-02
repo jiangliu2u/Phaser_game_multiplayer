@@ -8,28 +8,19 @@ var position = {
     y: Math.random() * 200 + 200,
     rotation:Math.random()+1
 };
-
-var remote_player = function (id, x, y, rotation) {
-    this.id = id;
-    this.x = x;
-    this.y = y;
-    this.rotation = rotation;
-    this.player = game.add.sprite(x, y, 'ship');
-    this.player.rotation = this.rotation;
-}
-
 var game = new Phaser.Game(800, 600, Phaser.CANVAS, '');
 var main = function (game) {
 };
-var other_players = []
+var other_players = [];
 main.prototype = {
     preload: function () {
         game.load.image('bullet', '/client/assets/bullet.png');
         game.load.image('ship', '/client/assets/ship.png');
+        
     },
     create: function () {
         socket = io.connect();
-
+        game.state.disableVisibilityChange = true;
         weapon = game.add.weapon(20, 'bullet');
         weapon.bulletKillType = Phaser.Weapon.KILL_LIFESPAN;
         weapon.bulletLifespan = 2000;
@@ -43,6 +34,7 @@ main.prototype = {
         player.body.collideWorldBounds = true;
         game.physics.enable(player, Phaser.Physics.ARCADE);
         weapon.trackSprite(player, 0, 0, true);
+        weapon.bulletInheritSpriteSpeed=true;
         game.world.wrap(player, 16);
         cursors = game.input.keyboard.createCursorKeys();
         fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
@@ -70,7 +62,7 @@ main.prototype = {
         }
 
         if (fireButton.isDown) {
-            weapon.fire();
+            fire();
         }
         socket.emit('move player',{id:socket.id,x:player.x,y:player.y,rotation:player.rotation})
     }
@@ -82,7 +74,8 @@ function onSocketConnected() {
 }
 
 function onSocketDisconnect() {
-    console.log('Disconnected from socket server')
+    console.log('Disconnected from socket server');
+    //delete 
 }
 
 function onNewPlayer(data) {
@@ -104,14 +97,19 @@ function displayOtherPlayer(data) {
 };
 
 
-var socketHandler = function () {
+function socketHandler() {
     socket.on('connect', onSocketConnected);
     socket.on('disconnect', onSocketDisconnect);
     socket.on('new player', onNewPlayer);
     socket.on('ConnectedPlayer', displayOtherPlayer);//此前连接的玩家
     socket.on('move player', onPlayerMove);
+    socket.on('player fire',onPlayerFire);
 
-};
+}
+function onPlayerFire(data){
+    var fire_player = FindPlayerById(data.id);
+    fire_player.fire();
+}
 function onPlayerMove(data){
     var moved_player = FindPlayerById(data.id);
     moved_player.player.x=data.x;
@@ -129,6 +127,9 @@ function FindPlayerById(id) {
 
     return false;
 }
-
+function fire(){
+    weapon.fire();
+    socket.emit("fire",{id:socket.id});
+}
 game.state.add('Main', main);
 game.state.start('Main');
